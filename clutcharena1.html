@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLUTCH ARENA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #1a1a3a);
+            color: white;
+            min-height: 100vh;
+        }
+        .container { max-width: 500px; margin: 0 auto; padding: 10px; }
+        
+        .header {
+            background: rgba(20,20,50,0.95);
+            padding: 20px;
+            text-align: center;
+            border-radius: 15px;
+            border: 2px solid #ff6600;
+            margin-bottom: 15px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .header h1 { color: #ff6600; font-size: 24px; }
+        .header p { font-size: 11px; color: #ccc; }
+        
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            background: rgba(20,20,50,0.8);
+            padding: 8px;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        .tab {
+            flex: 1;
+            min-width: 60px;
+            padding: 10px 5px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .tab.active { background: #ff6600; }
+        
+        .card {
+            background: rgba(20,20,50,0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,102,0,0.3);
+        }
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .badge {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-type { background: rgba(255,102,0,0.2); color: #ff6600; border: 1px solid #ff6600; }
+        .badge-mode { background: rgba(0,255,0,0.2); color: #00ff44; border: 1px solid #00ff44; }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .info-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .info-label { font-size: 9px; color: #999; }
+        .info-value { font-size: 13px; font-weight: bold; margin-top: 3px; }
+        .text-orange { color: #ff6600; }
+        .text-gold { color: #ffd700; }
+        .text-green { color: #00ff44; }
+        
+        .slots-box {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .slots-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .slots-count { font-size: 20px; font-weight: bold; color: #00ff44; }
+        .slots-count.full { color: #ff4444; }
+        .slots-sub { font-size: 10px; color: #777; margin-bottom: 8px; }
+        .bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bar-fill { height: 100%; background: #00ff44; border-radius: 3px; }
+        .bar-fill.warn { background: #ff6600; }
+        .bar-fill.full { background: #ff4444; }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            text-transform: uppercase;
+        }
+        .btn-join { background: linear-gradient(135deg, #ff6600, #cc4400); }
+        .btn-full { background: #333; color: #777; }
+        .btn-live { background: #cc0000; }
+        .btn-joined { background: #00cc44; }
+        
+        /* Admin Overlay */
+        .admin-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 99999;
+            justify-content: center;
+            align-items: center;
+        }
+        .admin-overlay.show { display: flex; }
+        
+        .admin-box {
+            background: #1a1a3a;
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #ffd700;
+            text-align: center;
+            width: 90%;
+            max-width: 350px;
+            animation: popIn 0.3s ease;
+        }
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .admin-box h3 { color: #ffd700; margin-bottom: 20px; }
+        .admin-box input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ffd700;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+            outline: none;
+        }
+        .admin-box .unlock-btn {
+            background: #ffd700;
+            color: black;
+            border: none;
+            padding: 12px 40px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .admin-box .close-btn {
+            background: transparent;
+            color: #999;
+            border: none;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 15px;
+            display: block;
+            width: 100%;
+        }
+        
+        .admin-panel {
+            background: rgba(0,0,0,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            margin-bottom: 20px;
+        }
+        .admin-panel h2 { color: #ffd700; margin-bottom: 15px; font-size: 16px; }
+        .match-group {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 3px solid #ff6600;
+        }
+        .match-group h3 { color: #ff6600; font-size: 14px; margin-bottom: 10px; }
+        .player-row {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        .player-row .pname { color: #00ff44; font-weight: bold; }
+        .export-btn {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .copy-btn {
+            background: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+            font-size: 14px;
+        }
+        .logout-btn {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 11px;
+            cursor: pointer;
+            float: right;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            z-index: 999999;
+            animation: slideIn 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+        .toast-success { background: #00cc44; }
+        .toast-error { background: #cc0000; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .hidden { display: none !important; }
+        .loading { text-align: center; padding: 40px; color: #999; }
+        .empty { text-align: center; padding: 30px; color: #777; }
+        
+        .press-indicator {
+            display: none;
+            position: fixed;
+            bottom: 50%;
+            left: 50%;
+            transform: translate(-50%, 50%);
+            background: rgba(0,0,0,0.9);
+            color: #ffd700;
+            padding: 15px 25px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: bold;
+            z-index: 99998;
+            border: 1px solid #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header" id="headerArea">
+            <h1>🎮 CLUTCH ARENA</h1>
+            <p>TOURNAMENT ZONE</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('upcoming')">🎮 UPCOMING</button>
+            <button class="tab" onclick="switchTab('ongoing')">🔴 LIVE</button>
+            <button class="tab" onclick="switchTab('completed')">🏆 RESULTS</button>
+            <button class="tab" onclick="switchTab('mymatches')">📋 MY MATCHES</button>
+        </div>
+
+        <div class="press-indicator" id="pressIndicator">Keep holding... <span id="countdownNum">7</span>s</div>
+
+        <div class="admin-overlay" id="adminOverlay">
+            <div class="admin-box">
+                <h3>🔐 Admin Access</h3>
+                <input type="password" id="adminPassInput" placeholder="Password" maxlength="20">
+                <br>
+                <button class="unlock-btn" onclick="adminLogin()">🔓 Unlock</button>
+                <button class="close-btn" onclick="closeAdminOverlay()">✖ Cancel</button>
+            </div>
+        </div>
+
+        <div class="admin-panel hidden" id="adminPanel">
+            <button class="logout-btn" onclick="adminLogout()">🔒 Close Panel</button>
+            <h2>👑 Admin Panel</h2>
+            <div id="adminContent"><p style="color:#999;">Loading...</p></div>
+        </div>
+
+        <div id="tournamentList">
+            <div class="loading">Loading...</div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        var SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxrBnWBYvCW4jvjJngRtMX0szN_aZkIlXMDmJnRndOdw5nBL3OSbHAyLqz6suSk_mS-TtD9XviIDlx/pub?gid=890632005&single=true&output=csv';
+        var ADMIN_PASSWORD = 'clutch2024';
+        var ADMIN_WHATSAPP = '9199999999999';
+        
+        var tournaments = [];
+        var currentTab = 'upcoming';
+        var isAdminLoggedIn = false;
+        
+        // ==========================================
+        // PLAYER NAME SYSTEM
+        // ==========================================
+        function getPlayerName() {
+            return localStorage.getItem('clutchPlayerName') || '';
+        }
+        
+        function setPlayerName(name) {
+            localStorage.setItem('clutchPlayerName', name);
+        }
+        
+        function getPlayerId() {
+            var pid = localStorage.getItem('clutchPlayerId');
+            if (!pid) {
+                pid = 'P_' + Date.now().toString(36).toUpperCase();
+                localStorage.setItem('clutchPlayerId', pid);
+            }
+            return pid;
+        }
+        
+        var CURRENT_PLAYER_ID = getPlayerId();
+        var CURRENT_PLAYER_NAME = getPlayerName();
+        
+        // ==========================================
+        // CHECK IF PLAYER ALREADY JOINED
+        // ==========================================
+        function hasPlayerJoined(matchId) {
+            var bookings = getBookings();
+            if (bookings[matchId]) {
+                return bookings[matchId][CURRENT_PLAYER_ID] ? true : false;
+            }
+            return false;
+        }
+        
+        // ==========================================
+        // LOCAL STORAGE
+        // ==========================================
+        function getBookings() {
+            var data = localStorage.getItem('clutchBookings');
+            return data ? JSON.parse(data) : {};
+        }
+        
+        function saveBooking(matchId, playerData) {
+            var bookings = getBookings();
+            if (!bookings[matchId]) bookings[matchId] = {};
+            bookings[matchId][playerData.playerId] = playerData;
+            localStorage.setItem('clutchBookings', JSON.stringify(bookings));
+        }
+        
+        function getBookedCount(matchId) {
+            var bookings = getBookings();
+            return (bookings[matchId]) ? Object.keys(bookings[matchId]).length : 0;
+        }
+        
+        function getAllBookingsGrouped() {
+            return getBookings();
+        }
+        
+        // ==========================================
+        // SECRET LONG PRESS
+        // ==========================================
+        var pressTimer, countdownTimer, pressStartTime;
+        var headerArea = document.getElementById('headerArea');
+        var pressIndicator = document.getElementById('pressIndicator');
+        
+        function startPress(e) {
+            e.preventDefault();
+            pressStartTime = Date.now();
+            pressTimer = setTimeout(function() {
+                document.getElementById('adminOverlay').classList.add('show');
+                document.getElementById('adminPassInput').focus();
+            }, 7000);
+            pressIndicator.style.display = 'block';
+            updateCountdown();
+            countdownTimer = setInterval(updateCountdown, 1000);
+        }
+        
+        function updateCountdown() {
+            var remaining = Math.max(0, Math.ceil((7000 - (Date.now() - pressStartTime)) / 1000));
+            document.getElementById('countdownNum').textContent = remaining;
+            if (remaining <= 0) { pressIndicator.style.display = 'none'; clearInterval(countdownTimer); }
+        }
+        
+        function cancelPress() {
+            clearTimeout(pressTimer);
+            clearInterval(countdownTimer);
+            pressIndicator.style.display = 'none';
+        }
+        
+        headerArea.addEventListener('touchstart', startPress, { passive: false });
+        headerArea.addEventListener('touchend', cancelPress);
+        headerArea.addEventListener('touchmove', cancelPress);
+        headerArea.addEventListener('touchcancel', cancelPress);
+        headerArea.addEventListener('mousedown', startPress);
+        headerArea.addEventListener('mouseup', cancelPress);
+        headerArea.addEventListener('mouseleave', cancelPress);
+        
+        function closeAdminOverlay() {
+            document.getElementById('adminOverlay').classList.remove('show');
+            document.getElementById('adminPassInput').value = '';
+        }
+        
+        function adminLogin() {
+            if (document.getElementById('adminPassInput').value === ADMIN_PASSWORD) {
+                isAdminLoggedIn = true;
+                closeAdminOverlay();
+                document.getElementById('adminPanel').classList.remove('hidden');
+                loadAdminPanel();
+                showToast('✅ Access Granted', 'success');
+            } else {
+                showToast('❌ Wrong Password!', 'error');
+            }
+        }
+        
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminPanel').classList.add('hidden');
+            showToast('🔒 Panel Closed', 'error');
+        }
+        
+        // ==========================================
+        // ADMIN PANEL
+        // ==========================================
+        function loadAdminPanel() {
+            if (!isAdminLoggedIn) return;
+            var allBookings = getAllBookingsGrouped();
+            var matchIds = Object.keys(allBookings);
+            
+            if (matchIds.length === 0) {
+                document.getElementById('adminContent').innerHTML = '<p style="color:#999;">No players yet!</p>';
+                return;
+            }
+            
+            var html = '<button class="export-btn" onclick="exportAllData()">📱 SEND ALL TO WHATSAPP</button><br><br>';
+            
+            matchIds.forEach(function(matchId) {
+                var t = null;
+                for (var i = 0; i < tournaments.length; i++) {
+                    if (tournaments[i].matchid === matchId) { t = tournaments[i]; break; }
+                }
+                var players = Object.keys(allBookings[matchId]);
+                
+                html += '<div class="match-group">';
+                html += '<h3>🏆 ' + matchId + '</h3>';
+                if (t) html += '<p style="font-size:11px;color:#999;">' + t.type + ' - ' + t.mode + ' | ' + t.date + ' ' + t.time + ' | Room: ' + (t.roomid || 'N/A') + '</p>';
+                html += '<p style="font-size:12px;color:#ffd700;margin:8px 0;">👥 Players: ' + players.length + '/' + (t ? t.totalSlots : '?') + '</p>';
+                
+                players.forEach(function(pid, index) {
+                    var p = allBookings[matchId][pid];
+                    html += '<div class="player-row">';
+                    html += '<span style="color:#999;">#' + (index + 1) + '</span> ';
+                    html += '<span class="pname">👤 ' + (p.playerName || 'Unknown') + '</span>';
+                    html += '<br><span style="font-size:10px;color:#999;">⏰ ' + (p.joinedAt || '') + '</span>';
+                    html += '</div>';
+                });
+                
+                html += '<button class="copy-btn" onclick="exportMatchData(\'' + matchId + '\')">📋 Copy Players</button>';
+                html += '</div>';
+            });
+            
+            document.getElementById('adminContent').innerHTML = html;
+        }
+        
+        function sendAdminNotification(matchId, playerData) {
+            var t = null;
+            for (var i = 0; i < tournaments.length; i++) {
+                if (tournaments[i].matchid === matchId) { t = tournaments[i]; break; }
+            }
+            
+            var msg = '🎮 *NEW PLAYER JOINED!*\n\n';
+            msg += '━━━━━━━━━━━━━━━━\n';
+            msg += '📋 *Match:* ' + (t ? t.type : 'N/A') + ' - ' + (t ? t.mode : 'N/A') + '\n';
+            msg += '📅 *Date:* ' + (t ? t.date : 'N/A') + ' | *Time:* ' + (t ? t.time : 'N/A') + '\n';
+            msg += '🗺️ *Map:* ' + (t ? t.map : 'N/A') + '\n';
+            msg += '💰 *Entry:* ' + (t ? t.entry : '0') + ' Coins\n';
+            msg += '━━━━━━━━━━━━━━━━\n';
+            msg += '👤 *Name:* ' + playerData.playerName + '\n';
+            msg += '⏰ *Joined:* ' + playerData.joinedAt + '\n';
+            msg += '━━━━━━━━━━━━━━━━\n';
+            msg += '👥 *Total:* ' + getBookedCount(matchId) + '/' + (t ? t.totalSlots : '?') + '\n';
+            
+            window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+        }
+        
+        function exportAllData() {
+            var allBookings = getAllBookingsGrouped();
+            var txt = '🎮 CLUTCH ARENA - ALL PLAYERS\n\n';
+            Object.keys(allBookings).forEach(function(mid) {
+                var t = null;
+                for (var i = 0; i < tournaments.length; i++) {
+                    if (tournaments[i].matchid === mid) { t = tournaments[i]; break; }
+                }
+                txt += 'MATCH: ' + mid + '\n';
+                if (t) txt += t.type + ' - ' + t.mode + ' | ' + t.date + ' ' + t.time + '\n';
+                txt += 'Players: ' + Object.keys(allBookings[mid]).length + '/' + (t ? t.totalSlots : '?') + '\n';
+                Object.keys(allBookings[mid]).forEach(function(pid, i) {
+                    var p = allBookings[mid][pid];
+                    txt += (i+1) + '. ' + (p.playerName || 'Unknown') + ' | ' + p.joinedAt + '\n';
+                });
+                txt += '\n';
+            });
+            navigator.clipboard.writeText(txt);
+            window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(txt), '_blank');
+            showToast('📱 Sent!', 'success');
+        }
+        
+        function exportMatchData(matchId) {
+            var allBookings = getAllBookingsGrouped();
+            var players = allBookings[matchId] || {};
+            var pids = Object.keys(players);
+            var t = null;
+            for (var i = 0; i < tournaments.length; i++) {
+                if (tournaments[i].matchid === matchId) { t = tournaments[i]; break; }
+            }
+            var txt = '🎮 MATCH: ' + matchId + '\n';
+            if (t) txt += t.type + ' - ' + t.mode + ' | ' + t.date + ' ' + t.time + '\n';
+            txt += 'Players: ' + pids.length + '\n\n';
+            pids.forEach(function(pid, i) {
+                txt += (i+1) + '. ' + (players[pid].playerName || 'Unknown') + '\n';
+            });
+            navigator.clipboard.writeText(txt);
+            window.open('https://wa.me/' + ADMIN_WHATSAPP + '?text=' + encodeURIComponent(txt), '_blank');
+            showToast('📱 Sent!', 'success');
+        }
+        
+        // ==========================================
+        // TOURNAMENT LOAD
+        // ==========================================
+        function loadTournaments() {
+            fetch(SHEET_URL)
+                .then(function(res) { return res.text(); })
+                .then(function(csv) {
+                    var rows = csv.split('\n').filter(function(r) { return r.trim(); });
+                    if (rows.length < 2) {
+                        document.getElementById('tournamentList').innerHTML = '<div class="empty">No tournaments</div>';
+                        return;
+                    }
+                    var headers = rows[0].split(',').map(function(h) { return h.trim().toLowerCase(); });
+                    tournaments = [];
+                    for (var i = 1; i < rows.length; i++) {
+                        var vals = rows[i].split(',').map(function(v) { return v.trim(); });
+                        var t = {};
+                        for (var j = 0; j < headers.length; j++) t[headers[j]] = vals[j] || '';
+                        t.totalSlots = parseInt(t.slots) || parseInt(t.max) || 48;
+                        t.bookedSlots = getBookedCount(t.matchid);
+                        t.availableSlots = t.totalSlots - t.bookedSlots;
+                        var now = new Date();
+                        var md = new Date(t.date + ' ' + t.time);
+                        if (isNaN(md.getTime())) t.status = 'upcoming';
+                        else if (md > now) t.status = 'upcoming';
+                        else if (Math.abs(md - now) < 7200000) t.status = 'ongoing';
+                        else t.status = 'completed';
+                        tournaments.push(t);
+                    }
+                    renderTournaments();
+                    if (isAdminLoggedIn) loadAdminPanel();
+                })
+                .catch(function() {
+                    document.getElementById('tournamentList').innerHTML = '<div class="empty">Error! <button onclick="loadTournaments()" style="padding:10px;background:#ff6600;color:white;border:none;border-radius:5px;">RETRY</button></div>';
+                });
+        }
+        
+        function renderTournaments() {
+            var list = document.getElementById('tournamentList');
+            
+            if (currentTab === 'mymatches') {
+                var allBookings = getAllBookingsGrouped();
+                var myMatches = [];
+                Object.keys(allBookings).forEach(function(matchId) {
+                    if (allBookings[matchId][CURRENT_PLAYER_ID]) {
+                        myMatches.push({
+                            matchId: matchId,
+                            data: allBookings[matchId][CURRENT_PLAYER_ID]
+                        });
+                    }
+                });
+                
+                if (myMatches.length === 0) {
+                    list.innerHTML = '<div class="empty"><p>😔 No matches joined!</p></div>';
+                    return;
+                }
+                
+                var html = '';
+                if (CURRENT_PLAYER_NAME) {
+                    html += '<p style="margin-bottom:10px;font-size:12px;color:#00ff44;">👤 ' + CURRENT_PLAYER_NAME + '</p>';
+                }
+                myMatches.forEach(function(m) {
+                    html += '<div class="card" style="border-left:3px solid #00ff44;">';
+                    html += '<div class="card-top">';
+                    html += '<span class="badge badge-type">' + (m.data.type || 'N/A') + '</span>';
+                    html += '<span class="badge badge-mode">' + (m.data.mode || 'N/A') + '</span>';
+                    html += '</div>';
+                    html += '<div class="info-grid">';
+                    html += '<div class="info-item"><div class="info-label">DATE</div><div class="info-value">' + (m.data.date||'') + ' ' + (m.data.time||'') + '</div></div>';
+                    html += '<div class="info-item"><div class="info-label">MAP</div><div class="info-value">' + (m.data.map||'N/A') + '</div></div>';
+                    html += '<div class="info-item"><div class="info-label">ROOM ID</div><div class="info-value text-green">' + (m.data.roomid||'TBA') + '</div></div>';
+                    html += '<div class="info-item"><div class="info-label">PASSWORD</div><div class="info-value text-green">' + (m.data.password||'TBA') + '</div></div>';
+                    html += '</div>';
+                    html += '<p style="font-size:11px;color:#999;">⏰ Joined: ' + (m.data.joinedAt||'') + '</p>';
+                    html += '</div>';
+                });
+                list.innerHTML = html;
+                return;
+            }
+            
+            var filtered = tournaments.filter(function(t) {
+                if (currentTab === 'upcoming') return t.status === 'upcoming';
+                if (currentTab === 'ongoing') return t.status === 'ongoing';
+                if (currentTab === 'completed') return t.status === 'completed';
+                return true;
+            });
+            
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty">No ' + currentTab + ' tournaments</div>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < filtered.length; i++) {
+                var t = filtered[i];
+                var full = t.availableSlots <= 0;
+                var alreadyJoined = hasPlayerJoined(t.matchid);
+                var pct = t.totalSlots > 0 ? (t.bookedSlots / t.totalSlots) * 100 : 0;
+                var bc = pct >= 90 ? 'full' : pct >= 60 ? 'warn' : '';
+                var nc = pct >= 90 ? 'full' : '';
+                
+                html += '<div class="card">';
+                html += '<div class="card-top">';
+                html += '<span class="badge badge-type">' + (t.type || 'Free Fire') + '</span>';
+                html += '<span class="badge badge-mode">' + (t.mode || 'Squad') + '</span>';
+                html += '</div>';
+                html += '<div class="info-grid">';
+                html += '<div class="info-item"><div class="info-label">DATE & TIME</div><div class="info-value">' + (t.date||'') + ' ' + (t.time||'') + '</div></div>';
+                html += '<div class="info-item"><div class="info-label">MAP</div><div class="info-value">' + (t.map||'Bermuda') + '</div></div>';
+                html += '<div class="info-item"><div class="info-label">ENTRY FEE</div><div class="info-value text-orange">' + (t.entry||'0') + ' Coins</div></div>';
+                html += '<div class="info-item"><div class="info-label">PRIZE</div><div class="info-value text-gold">' + (t.prize||'0') + ' Coins</div></div>';
+                html += '</div>';
+                html += '<div class="slots-box">';
+                html += '<div class="slots-row"><span>SLOTS</span><span class="slots-count ' + nc + '">' + (full ? 'FULL' : t.availableSlots + ' / ' + t.totalSlots) + '</span></div>';
+                html += '<div class="slots-sub">Booked: ' + t.bookedSlots + ' | Max: ' + t.totalSlots + '</div>';
+                html += '<div class="bar"><div class="bar-fill ' + bc + '" style="width:' + Math.min(pct, 100) + '%"></div></div>';
+                html += '</div>';
+                
+                if (t.status === 'upcoming') {
+                    if (alreadyJoined) {
+                        html += '<button class="btn btn-joined">✅ ALREADY JOINED</button>';
+                    } else if (full) {
+                        html += '<button class="btn btn-full">🔒 SLOTS FULL</button>';
+                    } else {
+                        html += '<button class="btn btn-join" onclick="joinTournament(\'' + t.matchid + '\', this)">⚡ JOIN NOW</button>';
+                    }
+                } else if (t.status === 'ongoing') {
+                    html += '<button class="btn btn-live" onclick="alert(\'Room: ' + (t.roomid||'N/A') + ' | Pass: ' + (t.password||'N/A') + '\')">🔴 LIVE - ROOM</button>';
+                } else {
+                    html += '<button class="btn btn-full">🏆 WINNER: ' + (t.winner||'TBA') + '</button>';
+                }
+                html += '</div>';
+            }
+            list.innerHTML = html;
+        }
+        
+        // ==========================================
+        // JOIN TOURNAMENT
+        // ==========================================
+        function joinTournament(matchId, btn) {
+            var t = null;
+            for (var i = 0; i < tournaments.length; i++) {
+                if (tournaments[i].matchid === matchId) { t = tournaments[i]; break; }
+            }
+            
+            if (!t) return;
+            
+            // CHECK IF ALREADY JOINED
+            if (hasPlayerJoined(matchId)) {
+                showToast('⚠️ You already joined this tournament!', 'error');
+                return;
+            }
+            
+            if (t.availableSlots <= 0) {
+                showToast('❌ Slots full!', 'error');
+                return;
+            }
+            
+            // ASK GAME NAME
+            var gameName = CURRENT_PLAYER_NAME;
+            if (!gameName) {
+                gameName = prompt('🎮 Enter your Free Fire Game Name:', '');
+                if (!gameName || !gameName.trim()) {
+                    showToast('❌ Please enter your game name!', 'error');
+                    return;
+                }
+                gameName = gameName.trim();
+                setPlayerName(gameName);
+                CURRENT_PLAYER_NAME = gameName;
+            }
+            
+            if (!confirm('🏆 JOIN TOURNAMENT?\n\n' +
+                'Game: ' + (t.type||'Free Fire') + ' - ' + (t.mode||'Squad') + '\n' +
+                'Date: ' + (t.date||'') + ' ' + (t.time||'') + '\n' +
+                'Map: ' + (t.map||'Bermuda') + '\n' +
+                'Entry: ' + (t.entry||'0') + ' Coins\n' +
+                'Name: ' + CURRENT_PLAYER_NAME + '\n\n' +
+                'OK to confirm!')) return;
+            
+            var playerData = {
+                playerId: CURRENT_PLAYER_ID,
+                playerName: CURRENT_PLAYER_NAME,
+                joinedAt: new Date().toLocaleString(),
+                entryFee: t.entry || '0',
+                type: t.type || '',
+                mode: t.mode || '',
+                date: t.date || '',
+                time: t.time || '',
+                map: t.map || '',
+                roomid: t.roomid || '',
+                password: t.password || '',
+                matchId: matchId
+            };
+            
+            saveBooking(matchId, playerData);
+            t.bookedSlots = getBookedCount(matchId);
+            t.availableSlots = t.totalSlots - t.bookedSlots;
+            
+            btn.textContent = '✅ JOINED';
+            btn.className = 'btn btn-joined';
+            btn.onclick = null;
+            
+            sendAdminNotification(matchId, playerData);
+            renderTournaments();
+            if (isAdminLoggedIn) loadAdminPanel();
+            
+            showToast('✅ Joined! Welcome ' + CURRENT_PLAYER_NAME + '! 🎉', 'success');
+        }
+        
+        function showToast(msg, type) {
+            var old = document.querySelector('.toast');
+            if (old) old.remove();
+            var toast = document.createElement('div');
+            toast.className = 'toast toast-' + (type === 'error' ? 'error' : 'success');
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            var btns = document.querySelectorAll('.tab');
+            for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+            event.target.classList.add('active');
+            renderTournaments();
+        }
+        
+        // ==========================================
+        // INIT
+        // ==========================================
+        console.log('👤 Player Name:', CURRENT_PLAYER_NAME || 'Not set');
+        
+        loadTournaments();
+        setInterval(loadTournaments, 30000);
+        setInterval(function() {
+            if (isAdminLoggedIn) loadAdminPanel();
+        }, 5000);
+    </script>
+</body>
+</html>
